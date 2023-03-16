@@ -1,0 +1,265 @@
+// arrow schema metadata
+enum MetadataKey : ubyte {
+	UNKNOWN = 0,
+	NEXTCODE,
+	CODEPATH,
+	LAYOUT,
+}
+
+// index structure metadata
+enum Marker : ubyte {
+    SENTINEL = 0, // SENTINEL char
+    SOH, // SOH start of heading, 1,
+    EOE, // EOE end of entry, 2,
+    SOO, // SOO start of object, 3
+    EOO, // EOO end of object, 4
+    SOA, // SOA start of array, 5
+    EOA, // EOA end of array, 6
+    AED, // AED array element divider, 7
+    // begin of danger zone, note: the danger zone is duplicated in fbs/build.rs
+    AEE, // AEE array element entry, 8
+    TEXT, // TEXT direct string start, 9
+    FRAG, // FRAG fragment long text, 10
+    INT8, // INT8 signed byte integer start, 11
+    UINT8, // UINT8 unsigned byte integer start, 12
+    INT16, // INT16 signed short integer start, 13
+    UINT16, // UINT16 unsigned short integer start, 14
+    INT32, // INT32 signed int integer start, 15
+    UINT32, // UINT32 unsigned int integer start, 16
+    DATE32, // DATE32 signed int integer start, 17
+    FLT32, // FLT32 float numeric start, 18
+    INT64, // INT64 signed long integer start, 19
+    UINT64, // UINT64 unsigned long integer start, 20
+    DATE64, // DATE64 signed long integer start, 21
+    FLT64, // FLT64 double numeric start, 22
+    BOOL, // BOOL boolean true start, 23
+    NULL, // NULL NULL start, 24
+    // end of danger zone
+    JSON, // JSON JSON start, 25
+    MAX = 31, // SPACE. Note: marker should not exceed MAX
+}
+
+enum Constant : ubyte {
+   FRAGMENT = 32, // text fragment size
+   BATCH_SZ = 64, // the number of blocks in each query iteration
+}
+
+// hybrid fmi index structure
+table HybridFMI {
+  version: ubyte;
+  len: uint;
+  index_char: [ubyte];
+  format: [ubyte];
+  hist_len: [ubyte];
+  hist_char: [ubyte];
+  hist_freq: [ubyte];
+  bv_len: [ubyte];
+  bv_data: [ubyte];
+}
+
+// columnar metadata
+table Metadata {
+  unicode: [uint32];
+  offset: [uint32];
+  da: [uint16];
+}
+
+table TextColumnar {
+  metadata: Metadata;
+  value: [uint]; // offset of line breaks in text block
+}
+
+table BoolColumnar {
+  metadata: Metadata;
+  value: [bool];
+}
+
+table NullColumnar {
+  metadata: Metadata;
+  value: [uint16];
+}
+
+table Uint8Columnar {
+  metadata: Metadata;
+  value: [ubyte];
+}
+
+table Int8Columnar {
+  metadata: Metadata;
+  value: [byte];
+}
+
+table Uint16Columnar {
+  metadata: Metadata;
+  value: [uint16];
+}
+
+table Int16Columnar {
+  metadata: Metadata;
+  value: [int16];
+}
+
+table Uint32Columnar {
+  metadata: Metadata;
+  value: [uint32];
+}
+
+table Int32Columnar {
+  metadata: Metadata;
+  value: [int32];
+}
+
+table Uint64Columnar {
+  metadata: Metadata;
+  value: [uint64];
+}
+
+table Int64Columnar {
+  metadata: Metadata;
+  value: [int64];
+}
+
+table Float32Columnar {
+  metadata: Metadata;
+  value: [float32];
+}
+
+table Float64Columnar {
+  metadata: Metadata;
+  value: [float64];
+}
+
+table ArrayBracket {
+  unicode: [uint32];
+  offset: [uint32];
+  value_offset: [uint32];
+  da: [uint16];
+  value: [uint16];
+}
+
+table ArrayElement {
+  unicode: [uint32];
+  offset: [uint32];
+  value: [uint16];
+}
+
+table Content {
+  hfmi: HybridFMI;
+  da: [uint]; // text_da is document array contains FRAG and SOH point back to line count
+}
+
+table SemiStructuredData {
+  sz: uint32;
+  content: Content;
+  array_bracket: ArrayBracket;
+  array_element: ArrayElement;
+  text: TextColumnar;
+  bool: BoolColumnar;
+  null: NullColumnar;
+  f64: Float64Columnar;
+  f32: Float32Columnar;
+  u64: Uint64Columnar;
+  i64: Int64Columnar;
+  d64: Int64Columnar;
+  u32: Uint32Columnar;
+  i32: Int32Columnar;
+  d32: Int32Columnar;
+  u16: Uint16Columnar;
+  i16: Int16Columnar;
+  u8: Uint8Columnar;
+  i8: Int8Columnar;
+}
+
+// shared go --> rust
+
+table BoolColumn {
+  unicode: uint32;
+  bool: [bool];
+}
+
+table NullColumn {
+  unicode: uint32;
+  null: [uint16];
+}
+
+table Float64Column {
+  unicode: uint32;
+  float64: [double];
+}
+
+table Float32Column {
+  unicode: uint32;
+  float: [float];
+}
+
+table Uint64Column {
+  unicode: uint32;
+  uint64: [ulong];
+}
+
+table Int64Column {
+  unicode: uint32;
+  int64: [long];
+}
+
+table Uint32Column {
+  unicode: uint32;
+  uint32: [uint];
+}
+
+table Int32Column {
+  unicode: uint32;
+  int32: [int];
+}
+
+table Uint16Column {
+  unicode: uint32;
+  uint16: [ushort];
+}
+
+table Int16Column {
+  unicode: uint32;
+  int16: [short];
+}
+
+table Uint8Column {
+  unicode: uint32;
+  uint8: [ubyte];
+}
+
+table Int8Column {
+  unicode: uint32;
+  int8: [byte];
+}
+
+table ColumnizedEntity {
+  i8: [Int8Column];
+  u8: [Uint8Column];
+  i16: [Int16Column];
+  u16: [Uint16Column];
+  i32: [Int32Column];
+  u32: [Uint32Column];
+  f32: [Float32Column];
+  d32: [Int32Column];
+  i64: [Int64Column];
+  u64: [Uint64Column];
+  f64: [Float64Column];
+  d64: [Int64Column];
+  text: [Uint32Column];
+  bool: [BoolColumn];
+  null: [NullColumn];
+  array_bracket: [Uint16Column];
+  array_element: [Uint16Column];
+}
+
+table ColumnizedEntities {
+  entities: [ColumnizedEntity];
+  text_content: [string];
+}
+
+// serialized query from Go component to Rust query engine
+table ClusterQuery {
+  ssql: [ubyte];
+  hosts: [string];
+  local: int;
+}
