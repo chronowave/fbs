@@ -1,4 +1,4 @@
-module github.com/chronowave/fbs
+module github.com/chronowave/fbs/go
 
 go 1.19
 
